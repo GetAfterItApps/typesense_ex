@@ -25,7 +25,7 @@ defmodule Typesense.Http do
     impl().request(configured_client(), options)
   end
 
-  def configured_client() do
+  defp configured_client() do
     %{connection_timeout_seconds: timeout} = Client.get()
 
     timeout_middleware = {Tesla.Middleware.Timeout, timeout: timeout * 1000}
@@ -35,7 +35,7 @@ defmodule Typesense.Http do
     client(middleware)
   end
 
-  def impl do
+  defp impl do
     Application.get_env(:typesense_ex, :http_library, Tesla)
   end
 end
