@@ -17,6 +17,7 @@ defmodule Typesense.Client do
   @type error :: {:error, String.t()}
   @type from :: {pid(), tag :: term()}
   @type api_key :: String.t() | nil
+  @type maybe_typesense_client :: t | atom()
 
   @type t :: %Client{
           api_key: api_key(),
@@ -59,17 +60,17 @@ defmodule Typesense.Client do
   @doc """
   Mark a node as unhealthy (e.g. after a failed request)
   """
-  @spec set_unhealthy(TypesenseNode.t()) :: Client.t()
-  def set_unhealthy(%TypesenseNode{} = node) do
-    GenServer.call(__MODULE__, {:set_health, node, :unhealthy})
+  @spec set_unhealthy(TypesenseNode.t(), maybe_typesense_client) :: Client.t()
+  def set_unhealthy(%TypesenseNode{} = node, client \\ Typesense.Client) do
+    GenServer.call(client, {:set_health, node, :unhealthy})
   end
 
   @doc """
   Mark a node healthy (e.g. after recovering from a failed request)
   """
-  @spec set_healthy(TypesenseNode.t()) :: Client.t()
-  def set_healthy(%TypesenseNode{} = node) do
-    GenServer.call(__MODULE__, {:set_health, node, :healthy})
+  @spec set_healthy(TypesenseNode.t(), maybe_typesense_client) :: Client.t()
+  def set_healthy(%TypesenseNode{} = node, client \\ Typesense.Client) do
+    GenServer.call(client, {:set_health, node, :healthy})
   end
 
   @doc """
@@ -84,23 +85,23 @@ defmodule Typesense.Client do
   ...> Client.next_node() |> TypesenseNode.to_config()
   %{host: "localhost", port: "8107", protocol: "https"}
   """
-  @spec next_node() :: TypesenseNode.t()
-  def next_node do
-    GenServer.call(Typesense.Client, :next_node)
+  @spec next_node(maybe_typesense_client) :: TypesenseNode.t()
+  def next_node(client \\ Typesense.Client) do
+    GenServer.call(client, :next_node)
   end
 
   @doc """
   A convenience to get back the Client struct
   """
-  @spec get() :: Client.t()
-  def get do
-    GenServer.call(Typesense.Client, :client)
+  @spec get(maybe_typesense_client) :: Client.t()
+  def get(client \\ Typesense.Client) do
+    GenServer.call(client, :client)
   end
 
   @spec start_link(config()) ::
           {:ok, pid()} | :ignore | {:error, {:already_started, pid()} | term()}
-  def start_link(config) do
-    GenServer.start_link(__MODULE__, config, name: __MODULE__)
+  def start_link(config, name \\ __MODULE__) do
+    GenServer.start_link(__MODULE__, config, name: name)
   end
 
   @impl true
