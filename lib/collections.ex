@@ -11,12 +11,31 @@ defmodule Typesense.Collections do
   @type collection_name :: String.t()
   @type response :: Request.response()
 
+  @type method :: Request.method()
+  @type path :: Request.path()
+  @type body :: Request.body()
+
+  @callback execute_request(
+              Typesense.Request.method(),
+              path(),
+              body()
+            ) ::
+              response()
+
+  def execute_request(method, path, body \\ %{}) do
+    request_impl().execute_request(
+      method,
+      path,
+      body
+    )
+  end
+
   @doc """
   Create a collection
   """
   @spec(create(schema()) :: {:ok, schema()}, {:error, any})
   def create(schema) do
-    Request.execute(:post, resource_path(), schema)
+    execute_request(:post, resource_path(), schema)
   end
 
   @doc """
@@ -24,7 +43,7 @@ defmodule Typesense.Collections do
   """
   @spec retrieve() :: response()
   def retrieve do
-    Request.execute(:get, resource_path())
+    execute_request(:get, resource_path())
   end
 
   @doc """
@@ -32,7 +51,7 @@ defmodule Typesense.Collections do
   """
   @spec retrieve(collection_name()) :: response()
   def retrieve(collection) do
-    Request.execute(:get, collection_path(collection))
+    execute_request(:get, collection_path(collection))
   end
 
   @doc """
@@ -54,7 +73,7 @@ defmodule Typesense.Collections do
   """
   @spec update(collection_name(), schema()) :: response()
   def update(collection, schema) do
-    Request.execute(:patch, collection_path(collection), schema)
+    execute_request(:patch, collection_path(collection), schema)
   end
 
   @doc """
@@ -62,7 +81,7 @@ defmodule Typesense.Collections do
   """
   @spec delete(collection_name()) :: response()
   def delete(collection) do
-    Request.execute(:delete, collection_path(collection))
+    execute_request(:delete, collection_path(collection))
   end
 
   @doc """
@@ -77,5 +96,9 @@ defmodule Typesense.Collections do
   @spec collection_path(collection_name()) :: String.t()
   defp collection_path(collection_name) do
     "#{resource_path()}/#{collection_name}"
+  end
+
+  defp request_impl do
+    Application.get_env(:typesense_ex, :request, Request)
   end
 end

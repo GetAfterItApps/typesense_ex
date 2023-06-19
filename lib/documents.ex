@@ -21,10 +21,31 @@ defmodule Typesense.Documents do
           atom() => String.t()
         }
 
+  @type method :: Request.method()
+  @type path :: Request.path()
+  @type body :: Request.body()
+
+  @callback execute_request(
+              Typesense.Request.method(),
+              path(),
+              body(),
+              params()
+            ) ::
+              response()
+
+  def execute_request(method, path, body \\ %{}, params \\ []) do
+    request_impl().execute_request(
+      method,
+      path,
+      body,
+      params
+    )
+  end
+
   @spec create(collection_name(), document()) :: response()
   def create(collection, document) do
     path = endpoint_path(collection)
-    Request.execute(:post, path, document)
+    execute_request(:post, path, document)
   end
 
   @spec upsert(collection_name(), document(), params()) :: response()
@@ -40,31 +61,31 @@ defmodule Typesense.Documents do
   @spec partial_update(collection_name(), document(), params()) :: response()
   def partial_update(collection, partial_document, params \\ []) do
     path = endpoint_path(collection, partial_document["id"])
-    Request.execute(:patch, path, partial_document, params)
+    execute_request(:patch, path, partial_document, params)
   end
 
   @spec retrieve(collection_name(), document_id(), params()) :: response()
   def retrieve(collection, document_id, params \\ []) do
     path = endpoint_path(collection, document_id)
-    Request.execute(:patch, path, nil, params)
+    execute_request(:patch, path, nil, params)
   end
 
   @spec delete(collection_name(), document_id()) :: response()
   def delete(collection, document_id) when is_integer(document_id) do
     document_path = endpoint_path(collection, document_id)
-    Request.execute(:delete, document_path, nil)
+    execute_request(:delete, document_path, nil)
   end
 
   @spec delete(collection_name(), delete_params()) :: response()
   def delete(collection, search_params) do
     document_path = endpoint_path(collection)
-    Request.execute(:delete, document_path, nil, search_params)
+    execute_request(:delete, document_path, nil, search_params)
   end
 
   @spec search(collection_name(), search_params()) :: response()
   def search(collection, search_params) do
     path = endpoint_path(collection, "search")
-    Request.execute(:get, path, nil, search_params)
+    execute_request(:get, path, nil, search_params)
   end
 
   @doc """
@@ -104,13 +125,13 @@ defmodule Typesense.Documents do
 
   def import_documents(collection, documents, params) when is_binary(documents) do
     path = endpoint_path(collection, "import")
-    Request.execute(:post, path, documents, params)
+    execute_request(:post, path, documents, params)
   end
 
   @spec export_documents(collection_name(), params()) :: response()
   def export_documents(collection, params \\ []) do
     path = endpoint_path(collection, "export")
-    Request.execute(:get, path, nil, params)
+    execute_request(:get, path, nil, params)
   end
 
   @spec endpoint_path(collection_name(), atom() | String.t() | integer()) :: String.t()
@@ -127,6 +148,10 @@ defmodule Typesense.Documents do
   defp modify(collection, document, params, action) do
     path = endpoint_path(collection)
     options = Keyword.merge(params, action: action)
-    Request.execute(:post, path, document, options)
+    execute_request(:post, path, document, options)
+  end
+
+  defp request_impl do
+    Application.get_env(:typesense_ex, :request, Request)
   end
 end

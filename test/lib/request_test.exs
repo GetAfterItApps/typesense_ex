@@ -20,7 +20,7 @@ defmodule Typesense.RequestTest do
       {:ok, %Tesla.Env{status: 200, body: "{\"results\": []}"}}
     end)
 
-    assert Request.execute(:get, "/fake-endpoint") == {:ok, %{"results" => []}}
+    assert Request.execute_request(:get, "/fake-endpoint") == {:ok, %{"results" => []}}
   end
 
   test "request/5 handles jsonl responses" do
@@ -32,7 +32,7 @@ defmodule Typesense.RequestTest do
       {:ok, %Tesla.Env{status: 200, body: "{\"results\": []}"}}
     end)
 
-    assert Request.execute(:get, "/fake-endpoint") ==
+    assert Request.execute_request(:get, "/fake-endpoint") ==
              {:ok, [%{"success" => true}, %{"success" => true}]}
   end
 
@@ -46,7 +46,7 @@ defmodule Typesense.RequestTest do
       {:ok, %Tesla.Env{status: 200, body: "{\"results\": []}"}}
     end)
 
-    assert Request.execute(:get, "/fake-endpoint", "string body") ==
+    assert Request.execute_request(:get, "/fake-endpoint", "string body") ==
              {:error,
               %Tesla.Env{
                 __client__: nil,
@@ -79,7 +79,7 @@ defmodule Typesense.RequestTest do
     end)
     |> expect(:client, 3, fn _middleware -> %Tesla.Client{} end)
 
-    assert Request.execute(:get, "/fake-endpoint") ==
+    assert Request.execute_request(:get, "/fake-endpoint") ==
              {:error,
               %Tesla.Env{
                 __client__: nil,
@@ -110,7 +110,7 @@ defmodule Typesense.RequestTest do
     end)
     |> expect(:client, 1, fn _middleware -> %Tesla.Client{} end)
 
-    assert Request.execute(:get, "/fake-endpoint") == {:ok, %{}}
+    assert Request.execute_request(:get, "/fake-endpoint") == {:ok, %{}}
 
     # Skip 8108 again
     Client.next_node()

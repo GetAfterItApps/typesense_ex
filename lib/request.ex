@@ -14,14 +14,17 @@ defmodule Typesense.Request do
   @type headers :: [header] | []
   @type response :: {:ok, map()} | {:error, any()}
 
-  @callback execute(method(), path(), body(), params(), retries(), TypesenseNode.t() | nil) ::
-              response()
+  # Note: the public callback doesn't expose retries and node since those are
+  # always internal to this module.
+  @callback execute_request(method(), path(), body(), params()) :: response()
 
   @doc """
   Handles executing requests, retrying and marking nodes as healthy/unhealthy
   based on the results
   """
-  def execute(method, path, body \\ %{}, params \\ [], retries \\ 0, retry_node \\ nil) do
+  @spec execute_request(method(), path(), body(), params(), retries(), TypesenseNode.t() | nil) ::
+          response()
+  def execute_request(method, path, body \\ %{}, params \\ [], retries \\ 0, retry_node \\ nil) do
     client = Client.get()
 
     node = next_node(retry_node)
@@ -51,7 +54,7 @@ defmodule Typesense.Request do
         if retries <= client.num_retries do
           milliseconds = (client.retry_interval_seconds * 1000) |> round()
           Process.sleep(milliseconds)
-          execute(method, path, body, params, retries, node)
+          execute_request(method, path, body, params, retries, node)
         else
           Client.set_unhealthy(node)
           {:error, bad_response}
