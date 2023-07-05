@@ -2,7 +2,7 @@ defmodule Typesense.Http do
   @moduledoc """
   A wrapper around Tesla to make the http library configurable
   """
-  alias Typesense.Client
+  alias Typesense.RequestConfig
 
   @type option() ::
           {:method, Tesla.Env.method()}
@@ -18,15 +18,15 @@ defmodule Typesense.Http do
   @callback request(Tesla.Client.t(), [option]) :: {:ok, Tesla.Env.t()}
 
   def client(middleware), do: impl().client(middleware)
-
   def request(client, options), do: impl().request(client, options)
+  def request_config, do: request_config_impl().get_config
 
   def execute(options) do
     impl().request(configured_client(), options)
   end
 
   def configured_client() do
-    %{connection_timeout_seconds: timeout} = Client.get()
+    %{connection_timeout_seconds: timeout} = request_config()
 
     timeout_middleware = {Tesla.Middleware.Timeout, timeout: timeout * 1000}
 
@@ -35,7 +35,11 @@ defmodule Typesense.Http do
     client(middleware)
   end
 
-  def impl do
+  defp request_config_impl do
+    Application.get_env(:typesense_ex, :request_config, RequestConfig)
+  end
+
+  defp impl do
     Application.get_env(:typesense_ex, :http_library, Tesla)
   end
 end

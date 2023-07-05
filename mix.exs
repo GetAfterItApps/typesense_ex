@@ -8,7 +8,13 @@ defmodule Typesense.MixProject do
       elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      name: "TypesenseEx",
+      source_url: "https://github.com/GetAfterItApps/typesense_ex",
+      docs: [
+        main: "TypesenseEx",
+        extras: ["README.md"]
+      ]
     ]
   end
 
@@ -30,7 +36,8 @@ defmodule Typesense.MixProject do
       {:jason, "~> 1.0", only: [:dev, :test]},
       {:mox, "~> 1.0", only: :test},
       {:dialyxir, "~> 1.3", only: [:dev], runtime: false},
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.27", only: :dev, runtime: false}
     ]
   end
 end

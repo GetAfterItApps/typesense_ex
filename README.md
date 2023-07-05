@@ -61,14 +61,15 @@ config :my_app, :typesense,
 
 **Configuration Options**
 
-| Name                         | Description                                                                                                                |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| nodes                        | (required) A list of typesense node configurations                                                                         |
-| api_key                      | (recommended) A string representing the configured typesense api key (e.g. above it's "`MY_TYPESENSE_API_KEY`")            |
+| Name                         | Description                                                                                                                  |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| nodes                        | (required) A list of typesense node configurations                                                                           |
+| nearest_node                 | (optional) node configuration for geographically nearest node (for optimizing network latency)                               |
+| api_key                      | (recommended) A string representing the configured typesense api key (e.g. above it's "`MY_TYPESENSE_API_KEY`")              |
 | connection_timeout_seconds   | [defaults to 10] Establishes how long Typesense should wait before retrying a request to a typesense node after timing out |
-| num_retries                  | [defaults to 3] The number of retry attempts that should be made before marking a node unhealthy                           |
-| retry_interval_seconds       | [defaults to 0.1] The number of seconds to wait between retries                                                            |
-| healthcheck_interval_seconds | [defaults to 15] The number of seconds to wait before resuming requests for a node after it has been marked unhealthy      |
+| num_retries                  | [defaults to 3] The number of retry attempts that should be made before marking a node unhealthy                             |
+| retry_interval_seconds       | [defaults to 0.1] The number of seconds to wait between retries                                                              |
+| healthcheck_interval_seconds | [defaults to 15] The number of seconds to wait before resuming requests for a node after it has been marked unhealthy        |
 
 Add the Typesense to your supervision tree.
 
@@ -89,7 +90,7 @@ in the [Mix Library Guidelines](https://hexdocs.pm/elixir/main/library-guideline
       {Finch, name: YourApp.Finch},
       # Start the Endpoint (http/https)
       YourAppWeb.Endpoint,
-      {Typesense.Client, typesense_config()}
+      {TypesenseEx.Client, typesense_config()}
 
       # Start a worker by calling: YourApp.Worker.start_link(arg)
       # {YourApp.Worker, arg}
@@ -112,6 +113,7 @@ in the [Mix Library Guidelines](https://hexdocs.pm/elixir/main/library-guideline
   end
 
 ```
+
 ### Optional Configuration
 
 Typesense uses Tesla and Tesla is configurable to use other Adapters. e.g.:
@@ -136,7 +138,7 @@ schema = %{
   default_sorting_field: "num_employees"
 }
 
-iex> Typesense.Collections.create(schema)
+iex> TypesenseEx.Collections.create(schema)
 ```
 
 Add [Typesense Document](https://typesense.org/docs/0.24.1/api/documents.html)
@@ -149,19 +151,21 @@ document = %{
   country: "US"
 }
 
-iex> Typesense.Documents.create("companies", document)
+iex> TypesenseEx.Documents.create("companies", document)
 ```
 
 Search for Typesense Documents
 
 ```elixir
 
-iex> Typesense.Documents.search("companies", %{q: "Jeffs", query_by: "company_name"})
+iex> TypesenseEx.Documents.search("companies", %{q: "Jeffs", query_by: "company_name"})
 ```
 
 ## Todo
 
-- [ ] Allow `Client` to dynamically add/remove nodes
+- [ ] Convert `Pool` to round robbin
+- [ ] Allow `Pool` to update
+- [ ] Allow `Pool` to dynamically add/remove nodes
 - [ ] [`Multisearch`](https://typesense.org/docs/0.24.1/api/federated-multi-search.html)
 - [ ] [`Api Keys` management](https://typesense.org/docs/0.24.1/api/api-keys.html)
 - [ ] [`Curation` Overrides](https://typesense.org/docs/0.24.1/api/curation.html)
@@ -169,5 +173,3 @@ iex> Typesense.Documents.search("companies", %{q: "Jeffs", query_by: "company_na
 - [ ] [`Synonyms`](https://typesense.org/docs/0.24.1/api/synonyms.html)
 - [ ] [`Cluster Operations`](https://typesense.org/docs/0.24.1/api/cluster-operations.html)
 - [ ] Return [official Error Codes text](https://typesense.org/docs/0.24.1/api/api-errors.html)
-
-
