@@ -1,8 +1,8 @@
-defmodule Typesense.Collections do
+defmodule TypesenseEx.Collections do
   @moduledoc """
-  Create and retrieve Typesense collections
+  Create and retrieve TypesenseEx collections
   """
-  alias Typesense.Request
+  alias TypesenseEx.Request
 
   # We could use Ecto embedded schemas
   # to validate these schemas. For now,
@@ -38,7 +38,7 @@ defmodule Typesense.Collections do
   @doc """
   Update a collection
 
-  NOTE: Typesense currently __ONLY supports updating fields__.
+  NOTE: TypesenseEx currently __ONLY supports updating fields__.
   To update a field, you must first DROP it before adding
   it back to the schema. To DROP a field, use the `drop`
   directive:

@@ -1,10 +1,10 @@
-defmodule Typesense.DocumentTest do
+defmodule TypesenseEx.DocumentTest do
   use TypesenseCase, async: false
-  alias Typesense.Documents
-  alias Typesense.MockHttp
+  alias TypesenseEx.Documents
+  alias TypesenseEx.MockHttp
 
   setup do
-    _pid = start_link_supervised!({Typesense.Client, @minimal_valid_config})
+    _pid = start_link_supervised!({TypesenseEx.Client, @minimal_valid_config})
     :ok
   end
 

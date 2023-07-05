@@ -1,13 +1,13 @@
-defmodule Typesense.Documents do
+defmodule TypesenseEx.Documents do
   @moduledoc """
-  Create and retrieve Typesense documents
+  Create and retrieve TypesenseEx documents
   """
-  alias Typesense.Collections
-  alias Typesense.Request
+  alias TypesenseEx.Collections
+  alias TypesenseEx.Request
 
   @type document_id :: String.t()
   @type document :: %{required(:id) => document_id(), required(atom()) => String.t()}
-  @type collection_name :: Typesense.Collections.collection_name()
+  @type collection_name :: TypesenseEx.Collections.collection_name()
   @type params :: Request.params()
   @type response :: Request.response()
 

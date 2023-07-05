@@ -1,15 +1,15 @@
-# Typesense
+# TypesenseEx
 
 (**EXPERIMENTAL / WORK IN PROGRESS**)
 
-## Elixir bindings for the [Typesense REST Api](https://typesense.org/docs/0.24.1/api/).
+## Elixir bindings for the [TypesenseEx REST Api](https://typesense.org/docs/0.24.1/api/).
 
 Th package is incomplete and will continue to change for the near future.
 
 ### Why An Elixir Load Balancer?
 
 In many cases an external load balancer may not be present. As a result,
-`Typesense` implements an Elixir-based load balancer for Typesense nodes. Nodes
+`TypesenseEx` implements an Elixir-based load balancer for TypesenseEx nodes. Nodes
 that are non-responsive after configurable set of retries and health check seconds
 interval are marked as healthy and will not be retried for a period of time (also
 configurable). All users of the application share the Client, causing node requests
@@ -17,7 +17,7 @@ to be distributed evenly across users.
 
 ## Installation and Configuration
 
-### Install Typesense
+### Install TypesenseEx
 
 Either [Install typesense locally](https://typesense.org/docs/guide/install-typesense.html) or
 use the hosted version, [typesense cloud](https://cloud.typesense.org/).
@@ -61,16 +61,17 @@ config :my_app, :typesense,
 
 **Configuration Options**
 
-| Name                         | Description                                                                                                                |
-| ---------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| nodes                        | (required) A list of typesense node configurations                                                                         |
-| api_key                      | (recommended) A string representing the configured typesense api key (e.g. above it's "`MY_TYPESENSE_API_KEY`")            |
-| connection_timeout_seconds   | [defaults to 10] Establishes how long Typesense should wait before retrying a request to a typesense node after timing out |
-| num_retries                  | [defaults to 3] The number of retry attempts that should be made before marking a node unhealthy                           |
-| retry_interval_seconds       | [defaults to 0.1] The number of seconds to wait between retries                                                            |
-| healthcheck_interval_seconds | [defaults to 15] The number of seconds to wait before resuming requests for a node after it has been marked unhealthy      |
+| Name                         | Description                                                                                                                  |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| nodes                        | (required) A list of typesense node configurations                                                                           |
+| nearest_node                 | (optional) node configuration for geographically nearest node (for optimizing network latency)                               |
+| api_key                      | (recommended) A string representing the configured typesense api key (e.g. above it's "`MY_TYPESENSE_API_KEY`")              |
+| connection_timeout_seconds   | [defaults to 10] Establishes how long TypesenseEx should wait before retrying a request to a typesense node after timing out |
+| num_retries                  | [defaults to 3] The number of retry attempts that should be made before marking a node unhealthy                             |
+| retry_interval_seconds       | [defaults to 0.1] The number of seconds to wait between retries                                                              |
+| healthcheck_interval_seconds | [defaults to 15] The number of seconds to wait before resuming requests for a node after it has been marked unhealthy        |
 
-Add the Typesense to your supervision tree.
+Add the TypesenseEx to your supervision tree.
 
 Note: configuration is passed into the client directly as recommended
 in the [Mix Library Guidelines](https://hexdocs.pm/elixir/main/library-guidelines.html#avoid-application-configuration)
@@ -89,7 +90,7 @@ in the [Mix Library Guidelines](https://hexdocs.pm/elixir/main/library-guideline
       {Finch, name: YourApp.Finch},
       # Start the Endpoint (http/https)
       YourAppWeb.Endpoint,
-      {Typesense.Client, typesense_config()}
+      {TypesenseExEx.Client, typesense_config()}
 
       # Start a worker by calling: YourApp.Worker.start_link(arg)
       # {YourApp.Worker, arg}
@@ -112,9 +113,10 @@ in the [Mix Library Guidelines](https://hexdocs.pm/elixir/main/library-guideline
   end
 
 ```
+
 ### Optional Configuration
 
-Typesense uses Tesla and Tesla is configurable to use other Adapters. e.g.:
+TypesenseEx uses Tesla and Tesla is configurable to use other Adapters. e.g.:
 
 ```elixir
 config :tesla, :adapter, {Tesla.Adapter.Finch, name: MyApp.Finch}
@@ -123,7 +125,7 @@ config :tesla, :adapter, {Tesla.Adapter.Finch, name: MyApp.Finch}
 
 ## Usage
 
-Add a [Typesense Collection](https://typesense.org/docs/0.24.1/api/collections.html):
+Add a [TypesenseEx Collection](https://typesense.org/docs/0.24.1/api/collections.html):
 
 ```elixir
 schema = %{
@@ -136,10 +138,10 @@ schema = %{
   default_sorting_field: "num_employees"
 }
 
-iex> Typesense.Collections.create(schema)
+iex> TypesenseExEx.Collections.create(schema)
 ```
 
-Add [Typesense Document](https://typesense.org/docs/0.24.1/api/documents.html)
+Add [TypesenseEx Document](https://typesense.org/docs/0.24.1/api/documents.html)
 
 ```elixir
 document = %{
@@ -149,14 +151,14 @@ document = %{
   country: "US"
 }
 
-iex> Typesense.Documents.create("companies", document)
+iex> TypesenseExEx.Documents.create("companies", document)
 ```
 
-Search for Typesense Documents
+Search for TypesenseEx Documents
 
 ```elixir
 
-iex> Typesense.Documents.search("companies", %{q: "Jeffs", query_by: "company_name"})
+iex> TypesenseExEx.Documents.search("companies", %{q: "Jeffs", query_by: "company_name"})
 ```
 
 ## Todo
@@ -169,5 +171,3 @@ iex> Typesense.Documents.search("companies", %{q: "Jeffs", query_by: "company_na
 - [ ] [`Synonyms`](https://typesense.org/docs/0.24.1/api/synonyms.html)
 - [ ] [`Cluster Operations`](https://typesense.org/docs/0.24.1/api/cluster-operations.html)
 - [ ] Return [official Error Codes text](https://typesense.org/docs/0.24.1/api/api-errors.html)
-
-

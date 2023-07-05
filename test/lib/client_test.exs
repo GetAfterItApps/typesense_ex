@@ -1,7 +1,7 @@
-defmodule Typesense.ClientTest do
+defmodule TypesenseEx.ClientTest do
   use ExUnit.Case
-  alias Typesense.Client
-  alias Typesense.TypesenseNode
+  alias TypesenseEx.Client
+  alias TypesenseEx.Node
 
   doctest Client
 
@@ -71,7 +71,7 @@ defmodule Typesense.ClientTest do
   test "set_unealthy/0 set_healthy/0 temporarily removes nodes from next_nodes" do
     {:ok, _pid} = Client.start_link(@minimal_valid_config)
     first_node_config = List.first(@valid_nodes)
-    first_node = TypesenseNode.new(first_node_config)
+    first_node = Node.new(first_node_config)
     assert_next_node("8107", :healthy)
     assert_next_node("8108", :healthy)
     assert_next_node("8109", :healthy)
@@ -95,7 +95,7 @@ defmodule Typesense.ClientTest do
       |> Map.put(:healthcheck_interval_seconds, 0)
       |> Client.start_link()
 
-    first_node = List.first(@valid_nodes) |> TypesenseNode.new()
+    first_node = List.first(@valid_nodes) |> Node.new()
 
     assert_next_node("8107", :healthy)
     Client.set_unhealthy(first_node)
@@ -113,9 +113,9 @@ defmodule Typesense.ClientTest do
       |> Client.start_link()
 
     assert_next_node("8110", :healthy)
-    TypesenseNode.new(nearest_node) |> Client.set_unhealthy()
+    Node.new(nearest_node) |> Client.set_unhealthy()
     assert_next_node("8107", :healthy)
-    TypesenseNode.new(nearest_node) |> Client.set_healthy()
+    Node.new(nearest_node) |> Client.set_healthy()
     assert_next_node("8110", :healthy)
   end
 

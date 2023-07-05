@@ -1,6 +1,6 @@
-defmodule Typesense.Client do
+defmodule TypesenseEx.Client do
   @moduledoc """
-  Provides configuration to establish a connection with Typesense and a
+  Provides configuration to establish a connection with TypesenseEx and a
   GenServer to act as a load balancer when load balancing is not handled
   by an external service.
   """
@@ -8,12 +8,12 @@ defmodule Typesense.Client do
   use GenServer
   require Logger
   alias __MODULE__
-  alias Typesense.TypesenseNode
+  alias TypesenseEx.Node
 
   @type node_index :: integer()
-  @type nodes :: [TypesenseNode.t()]
-  @type next_nodes :: [TypesenseNode.t()]
-  @type health_status :: TypesenseNode.health_status()
+  @type nodes :: [Node.t()]
+  @type next_nodes :: [Node.t()]
+  @type health_status :: Node.health_status()
   @type error :: {:error, String.t()}
   @type from :: {pid(), tag :: term()}
   @type api_key :: String.t() | nil
@@ -22,7 +22,7 @@ defmodule Typesense.Client do
           api_key: api_key(),
           nodes: nodes(),
           next_nodes: next_nodes(),
-          nearest_node: TypesenseNode.t() | nil,
+          nearest_node: Node.t() | nil,
           connection_timeout_seconds: integer(),
           healthcheck_interval_seconds: integer(),
           num_retries: integer(),
@@ -31,9 +31,9 @@ defmodule Typesense.Client do
         }
 
   @type config :: %{
-          optional(:nearest_node) => TypesenseNode.config(),
+          optional(:nearest_node) => Node.config(),
           api_key: api_key(),
-          nodes: [TypesenseNode.config()],
+          nodes: [Node.config()],
           connection_timeout_seconds: integer(),
           healthcheck_interval_seconds: integer(),
           num_retries: integer(),
@@ -52,23 +52,23 @@ defmodule Typesense.Client do
     errors: []
   ]
 
-  # If a node has one of these statuses we return it for use in Typesense
+  # If a node has one of these statuses we return it for use in TypesenseEx
   # requests
   @retryable_statuses [:healthy, :maybe_healthy]
 
   @doc """
   Mark a node as unhealthy (e.g. after a failed request)
   """
-  @spec set_unhealthy(TypesenseNode.t()) :: Client.t()
-  def set_unhealthy(%TypesenseNode{} = node) do
+  @spec set_unhealthy(Node.t()) :: Client.t()
+  def set_unhealthy(%Node{} = node) do
     GenServer.call(__MODULE__, {:set_health, node, :unhealthy})
   end
 
   @doc """
   Mark a node healthy (e.g. after recovering from a failed request)
   """
-  @spec set_healthy(TypesenseNode.t()) :: Client.t()
-  def set_healthy(%TypesenseNode{} = node) do
+  @spec set_healthy(Node.t()) :: Client.t()
+  def set_healthy(%Node{} = node) do
     GenServer.call(__MODULE__, {:set_health, node, :healthy})
   end
 
@@ -81,20 +81,12 @@ defmodule Typesense.Client do
   ## Example
   iex> node = %{host: "localhost", port: "8107", protocol: "https"}
   ...> Client.start_link(%{api_key: "123", nodes: [node]})
-  ...> Client.next_node() |> TypesenseNode.to_config()
+  ...> Client.next_node() |> Node.to_config()
   %{host: "localhost", port: "8107", protocol: "https"}
   """
-  @spec next_node() :: TypesenseNode.t()
+  @spec next_node() :: Node.t()
   def next_node do
-    GenServer.call(Typesense.Client, :next_node)
-  end
-
-  @doc """
-  A convenience to get back the Client struct
-  """
-  @spec get() :: Client.t()
-  def get do
-    GenServer.call(Typesense.Client, :client)
+    GenServer.call(TypesenseEx.Client, :next_node)
   end
 
   @spec start_link(config()) ::
@@ -122,7 +114,7 @@ defmodule Typesense.Client do
   end
 
   @impl true
-  @spec handle_call(:next_node, from, Client.t()) :: {:reply, TypesenseNode.t(), Client.t()}
+  @spec handle_call(:next_node, from, Client.t()) :: {:reply, Node.t(), Client.t()}
   def handle_call(
         :next_node,
         _from,
@@ -181,7 +173,7 @@ defmodule Typesense.Client do
     {:reply, new_client, new_client}
   end
 
-  @spec maybe_update_next_nodes_health(Client.t(), TypesenseNode.t(), health_status()) ::
+  @spec maybe_update_next_nodes_health(Client.t(), Node.t(), health_status()) ::
           Client.t()
   defp maybe_update_next_nodes_health(
          %{next_nodes: next_nodes} = client,
@@ -204,7 +196,7 @@ defmodule Typesense.Client do
     %{client | nodes: updated_nodes}
   end
 
-  @spec maybe_set_health(nodes(), TypesenseNode.t(), health_status()) :: [TypesenseNode.t()]
+  @spec maybe_set_health(nodes(), Node.t(), health_status()) :: [Node.t()]
   defp maybe_set_health(nodes, updatable_node, health_status) do
     Enum.reduce(nodes, [], fn node, acc ->
       if equal?(node, updatable_node) do
@@ -216,17 +208,17 @@ defmodule Typesense.Client do
     |> Enum.reverse()
   end
 
-  @spec equal?(TypesenseNode.t(), TypesenseNode.t()) :: boolean()
+  @spec equal?(Node.t(), Node.t()) :: boolean()
   defp equal?(first_node, second_node) do
-    TypesenseNode.to_config(first_node) == TypesenseNode.to_config(second_node)
+    Node.to_config(first_node) == Node.to_config(second_node)
   end
 
-  @spec set_health(TypesenseNode.t(), health_status()) :: TypesenseNode.t()
+  @spec set_health(Node.t(), health_status()) :: Node.t()
   defp set_health(node, health_status) do
     %{node | health_status: health_status, health_set_on: DateTime.utc_now()}
   end
 
-  @spec maybe_update_nearest_node_health(Client.t(), TypesenseNode.t(), health_status()) ::
+  @spec maybe_update_nearest_node_health(Client.t(), Node.t(), health_status()) ::
           Client.t()
   defp maybe_update_nearest_node_health(
          %Client{nearest_node: nil} = client,
@@ -268,12 +260,12 @@ defmodule Typesense.Client do
     |> Enum.filter(&retryable?/1)
   end
 
-  @spec retryable?(TypesenseNode.t()) :: boolean()
+  @spec retryable?(Node.t()) :: boolean()
   def retryable?(node) do
     node.health_status in @retryable_statuses
   end
 
-  @spec maybe_mark_status_maybe_healthy(TypesenseNode.t(), integer()) :: TypesenseNode.t()
+  @spec maybe_mark_status_maybe_healthy(Node.t(), integer()) :: Node.t()
   def maybe_mark_status_maybe_healthy(node, max_seconds) do
     now = DateTime.utc_now()
     elapsed = DateTime.diff(DateTime.utc_now(), node.health_set_on)
@@ -307,13 +299,13 @@ defmodule Typesense.Client do
     {:error, "Configuration Missing API Key"}
   end
 
-  @spec init_nearest_node(config()) :: {:ok, TypesenseNode.t()} | {:ok, nil} | error()
+  @spec init_nearest_node(config()) :: {:ok, Node.t()} | {:ok, nil} | error()
 
   defp init_nearest_node(config) when not is_map_key(config, :nearest_node), do: {:ok, nil}
 
   defp init_nearest_node(%{nearest_node: nearest_node_params}) do
-    if TypesenseNode.valid?(nearest_node_params) do
-      {:ok, TypesenseNode.new(nearest_node_params)}
+    if Node.valid?(nearest_node_params) do
+      {:ok, Node.new(nearest_node_params)}
     else
       {:error, "Invalid Nearest Node Specification"}
     end
@@ -333,12 +325,12 @@ defmodule Typesense.Client do
   end
 
   defp init_nodes(%{nodes: nodes}) do
-    nodes_valid? = Enum.all?(nodes, &TypesenseNode.valid?/1)
+    nodes_valid? = Enum.all?(nodes, &Node.valid?/1)
 
     err_msg = "One or More Node Configurations Missing Data"
 
     if nodes_valid? do
-      {:ok, Enum.map(nodes, &TypesenseNode.new/1)}
+      {:ok, Enum.map(nodes, &Node.new/1)}
     else
       {:error, err_msg}
     end
